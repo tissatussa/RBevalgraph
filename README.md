@@ -165,6 +165,40 @@ The search stops at whichever limit comes first:
 
 ---
 
+## About MultiPV
+
+### What it is
+
+Normally a chess engine looks for **one** best move and reports one main line, its *principal variation* (PV). With the UCI option **MultiPV** set to N, the engine reports the **N best moves**, each with its own line and its own evaluation, at every depth. RBevalgraph draws one coloured line for each of them.
+
+### What it costs
+
+In general, an engine does this by searching its best move first, then searching again with that move excluded to find the second best, and so on. How exactly depends on the engine, but each extra line costs a good part of an extra search. So in the same time, a higher MultiPV reaches a **lower depth**. You can see this for yourself in RBevalgraph: run the same position for the same time with MultiPV 1 and with MultiPV 8, and compare the depth on the right end of the axis.
+
+### Playing: leave it at 1
+
+For games, MultiPV belongs at 1. Time spent on the second, third and further moves is time not spent on the move the engine will actually play, so the chosen move gets weaker. Stockfish's own documentation gives exactly this advice, and it applies to engines in general. So in a GUI such as CuteChess, which can set MultiPV for an engine, keep it at 1 for matches and tournaments.
+
+MultiPV also does not show how the engine "thinks" during a game. With MultiPV 1, the engine only needs to prove that other moves are **worse** than its best one; it never works out how much worse. The exact values of lines 2 to N are extra work that only happens in MultiPV mode.
+
+### Analysing: what MultiPV is for
+
+For analysis, MultiPV is the tool: it shows which moves were candidates, how close they were, and how that changed with depth — which is exactly what RBevalgraph plots.
+
+**MultiPV can find moves that MultiPV 1 misses.** Modern engines spend little effort on moves that look bad early on: they are searched less deep than the main line, or cut off entirely. That is a big part of their strength, but it can hide a move whose value only shows at high depth, such as a sacrifice that first loses material. With MultiPV N, the N best moves are each searched as a main line, at full depth. A "puzzle move" that looks like the 7th best at low depth gets that full treatment only if MultiPV is 7 or more — and then it may climb to first place, where with MultiPV 1 it would never have been looked at closely. That is why a solution sometimes only appears with MultiPV 10 or higher. How strong this effect is differs per engine, and it is not guaranteed.
+
+**How far to trust lines 2 to N.** Line 1 is a normal search, only less deep than it would be in the same time with MultiPV 1. The other lines are searched with the knowledge gathered for the lines before them, and engines implement this with different care. Some report lines that are not in value order — example 2 in [examples/](examples/) shows this — and some are less precise for the lower lines. RBevalgraph always ranks by value, whatever the engine's own numbering.
+
+### Choosing a value in RBevalgraph
+
+- **3 to 6** gives a readable overview of the main candidates.
+- **8 to 12** for puzzles and sharp positions, with more time to make up for the lower depth.
+- To see how a particular move ranks, MultiPV must be at least its rank; moves that fall out of the list are shown thinner below the separator in the key column.
+- To compare engines, give them the same MultiPV, time, Hash and Threads.
+- With more than one thread, a search is not exactly repeatable: two runs of the same setup can differ a little.
+
+---
+
 ## Reading the graph
 
 - **Horizontal axis:** search depth. Under the axis, the elapsed seconds at each depth (`< elapsed seconds >`), and a countdown while the search runs.
