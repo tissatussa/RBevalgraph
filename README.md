@@ -2,6 +2,26 @@
 
 **Chess position analyser with a live MultiPV evaluation graph.**
 
+**Contents**
+
+- [Why](#why)
+- [What it does](#what-it-does)
+- [Requirements](#requirements)
+- [Download (Linux)](#download-linux)
+- [Building (Linux)](#building-linux)
+- [Building on Windows and macOS](#building-on-windows-and-macos)
+- [Using it](#using-it)
+- [About MultiPV](#about-multipv)
+- [Reading the graph](#reading-the-graph)
+- [The diagram and the Chess Alpha font](#the-diagram-and-the-chess-alpha-font)
+- [Engine detection](#engine-detection)
+- [config.yaml](#configyaml)
+- [Output files](#output-files)
+- [Tools](#tools)
+- [Files in this repository](#files-in-this-repository)
+- [Credits](#credits)
+- [Licence](#licence)
+
 Enter any chess position — RBevalgraph shows how each candidate move's evaluation changed with rising depth, using MultiPV.
 
 RBevalgraph is a small desktop program (Go + GTK4) that runs a UCI chess engine on one position and plots, *while the search runs*, a coloured line for every move the engine ever put in its MultiPV list. You see which moves the engine liked at depth 8, which ones it dropped at depth 14, and which one sneaked up from nowhere at depth 20.
