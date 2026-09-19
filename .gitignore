@@ -1,0 +1,16 @@
+# the compiled program and release packages
+/rbevalgraph
+*.exe
+*.tar.gz
+SHA256SUMS.txt
+
+# your own settings and output
+config.yaml
+*.log
+*.png
+!docs/*.png
+!examples/*.png
+!examples/*.log
+
+# private notes, kept locally only
+HANDOFF.md
