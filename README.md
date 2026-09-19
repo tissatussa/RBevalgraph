@@ -4,23 +4,31 @@
 
 **Contents**
 
+- [Introduction](#introduction)
 - [Why](#why)
 - [What it does](#what-it-does)
+- [Using it](#using-it)
+- [About MultiPV](#about-multipv)
+- [Reading the graph](#reading-the-graph)
+
+* [config.yaml](#configyaml)
+* [Output files](#output-files)
+* [Engine detection](#engine-detection)
+* [The diagram and the Chess Alpha font](#the-diagram-and-the-chess-alpha-font)
+
 - [Requirements](#requirements)
 - [Download (Linux)](#download-linux)
 - [Building (Linux)](#building-linux)
 - [Building on Windows and macOS](#building-on-windows-and-macos)
-- [Using it](#using-it)
-- [About MultiPV](#about-multipv)
-- [Reading the graph](#reading-the-graph)
-- [The diagram and the Chess Alpha font](#the-diagram-and-the-chess-alpha-font)
-- [Engine detection](#engine-detection)
-- [config.yaml](#configyaml)
-- [Output files](#output-files)
-- [Tools](#tools)
-- [Files in this repository](#files-in-this-repository)
-- [Credits](#credits)
-- [Licence](#licence)
+
+* [Tools](#tools)
+* [Files in this repository](#files-in-this-repository)
+* [Credits](#credits)
+* [Licence](#licence)
+
+---
+
+## Introduction
 
 Enter any chess position — RBevalgraph shows how each candidate move's evaluation changed with rising depth, using MultiPV.
 
@@ -55,6 +63,169 @@ From the INFO pane of the program:
 **Saving the graph** — What you see is what you save : resizing the window results in resizing the graph and the saved PNG has same aspect ratio. The right info column keeps its width. The file name is proposed for you, mentioning the engine name and your main settings.
 
 **Configuration** — Options are set automatically according to engine features, or grayed-out when not existing. Everything you set is instantly written to a file called 'config.yaml', created in same folder as your RBevalgraph binary. This configuration file is optional, it's read when the program starts : your last settings are kept.
+
+---
+
+## Using it
+
+1. **Engine** — type a path or press **Browse…** to pick a UCI engine binary. RBevalgraph asks the engine who it is and which options it has (see [Engine detection](#engine-detection)). The **ⓘ** button beside it shows the engine's full answer.
+2. **FEN** — paste a position. The field turns red while it cannot be parsed. A valid FEN shows its diagram at once.
+3. **Settings** — MultiPV, max seconds, max depth, Hash and Threads. Fields the engine does not support are grayed out.
+4. **Generate eval graph** — the search starts and the graph grows live. **Stop** ends it early; everything found so far stays.
+5. **Save PNG** — write the graph as it stands.
+
+The search stops at whichever limit comes first:
+
+- **Max seconds** — wall-clock limit, whatever depth has been reached.
+- **Max depth** — stop once this depth is complete for every candidate. `0` switches the depth limit off and lets the seconds decide.
+
+---
+
+## About MultiPV
+
+### What it is
+
+Normally a chess engine looks for **one** best move and reports one main line, its *principal variation* (PV). With the UCI option **MultiPV** set to N, the engine reports the **N best moves**, each with its own line and its own evaluation, at every depth. RBevalgraph draws one coloured line for each of them.
+
+### What it costs
+
+In general, an engine does this by searching its best move first, then searching again with that move excluded to find the second best, and so on. How exactly depends on the engine, but each extra line costs a good part of an extra search. So in the same time, a higher MultiPV reaches a **lower depth**. You can see this for yourself in RBevalgraph: run the same position for the same time with MultiPV 1 and with MultiPV 8, and compare the depth on the right end of the axis.
+
+### Playing: leave it at 1
+
+For games, MultiPV belongs at 1. Time spent on the second, third and further moves is time not spent on the move the engine will actually play, so the chosen move gets weaker. Stockfish's own documentation gives exactly this advice, and it applies to engines in general. So in a GUI such as CuteChess, which can set MultiPV for an engine, keep it at 1 for matches and tournaments.
+
+MultiPV also does not show how the engine "thinks" during a game. With MultiPV 1, the engine only needs to prove that other moves are **worse** than its best one; it never works out how much worse. The exact values of lines 2 to N are extra work that only happens in MultiPV mode.
+
+### Analysing: what MultiPV is for
+
+For analysis, MultiPV is the tool: it shows which moves were candidates, how close they were, and how that changed with depth — which is exactly what RBevalgraph plots.
+
+**MultiPV can find moves that MultiPV 1 misses.** Modern engines spend little effort on moves that look bad early on: they are searched less deep than the main line, or cut off entirely. That is a big part of their strength, but it can hide a move whose value only shows at high depth, such as a sacrifice that first loses material. With MultiPV N, the N best moves are each searched as a main line, at full depth. A "puzzle move" that looks like the 7th best at low depth gets that full treatment only if MultiPV is 7 or more — and then it may climb to first place, where with MultiPV 1 it would never have been looked at closely. That is why a solution sometimes only appears with MultiPV 10 or higher. How strong this effect is differs per engine, and it is not guaranteed.
+
+**How far to trust lines 2 to N.** Line 1 is a normal search, only less deep than it would be in the same time with MultiPV 1. The other lines are searched with the knowledge gathered for the lines before them, and engines implement this with different care. Some report lines that are not in value order — example 2 in [examples/](examples/) shows this — and some are less precise for the lower lines. RBevalgraph always ranks by value, whatever the engine's own numbering.
+
+### Choosing a value in RBevalgraph
+
+- **3 to 6** gives a readable overview of the main candidates.
+- **8 to 12** for puzzles and sharp positions, with more time to make up for the lower depth.
+- To see how a particular move ranks, MultiPV must be at least its rank; moves that fall out of the list are shown thinner below the separator in the key column.
+- To compare engines, give them the same MultiPV, time, Hash and Threads.
+- With more than one thread, a search is not exactly repeatable: two runs of the same setup can differ a little.
+
+---
+
+## Reading the graph
+
+- **Horizontal axis:** search depth. Under the axis, the elapsed seconds at each depth (`< elapsed seconds >`), and a countdown while the search runs.
+- **Vertical axis:** the engine's evaluation in pawns (the engine's centipawns / 100), plotted as the engine reports it: from the engine's point of view, so higher is better for the side to move — also when Black is to move. A mate score is plotted at ±10 and labelled `#+n` / `#-n` in the key column.
+- **The vertical scale is compressed.** Engine evaluations cluster: most candidates sit within a few centipawns of each other, while one line may wander far off. So the axis is centred on the cluster, linear near it and logarithmic beyond. The grid labels always show real values. When this compression is active, a note says so, upright along the left side of the eval labels.
+- **Lines are corner-rounded, not smoothed.** A smoothing spline would overshoot between points and draw evaluations the engine never reported.
+- **Equal values** at the same depth are fanned apart by a few pixels so no line hides behind another.
+- **The big dot with a black ring** marks the engine's `bestmove`.
+
+### The key column (right side)
+
+Below the diagram, every move the engine considered is listed with its colour, its SAN name and its latest evaluation. There are two groups, separated by a thin rule:
+
+- **Top group** — the moves present at the *last complete depth* (the deepest depth at which all MultiPV slots reported), sorted by evaluation. Thick lines, bold text.
+- **The rest** — moves that were in the MultiPV list at some point but fell out of it. Thin lines, with `(depth n)` telling you at which depth they were last seen — their value belongs to that depth. Their names are also printed at the end of their line in the plot.
+
+**Hover** over a move in the key column: an arrow shows that move on the diagram.
+
+### Colours and their behaviour
+
+A colour belongs to a **rank**, not to a move. The list runs warm to cool — **red, orange, dark yellow, green, dark blue, purple, brown, light blue, light pink**, then grey, indigo and further colours (18 in total, then they repeat).
+
+So a move takes the colour of the place it holds *now*: when one move overtakes another, the two lines swap colours. The red line is always the current number one. This is deliberate — you read the graph by rank.
+
+The palette is the `palette` variable in `main.go`, one line per colour.
+
+---
+
+## config.yaml
+
+All settings are saved instantly to `config.yaml`, next to the `rbevalgraph` binary (or in the working directory if that folder is not writable). The file is optional: delete it and the program starts with defaults. A damaged file is ignored and overwritten at the next change.
+
+Example (fantasy values):
+
+```yaml
+engine: /home/you/chess/engines/glimmerfish/glimmerfish-2.3
+fen: r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4
+multipv: 6
+max_seconds: 120
+max_depth: 0
+hash_mb: 256
+hash_choice: ""
+threads: 4
+last_save_dir_engine: /home/you/chess/engines/glimmerfish
+last_save_dir_png: /home/you/chess/graphs
+```
+
+| Key | Meaning | Default |
+|---|---|---|
+| `engine` | path to the UCI engine binary | empty |
+| `fen` | the position | empty |
+| `multipv` | number of candidate moves (UCI `MultiPV`) | 1 |
+| `max_seconds` | wall-clock limit of a search | 60 |
+| `max_depth` | depth limit, `0` = off | 0 |
+| `hash_mb` | Hash size in MB, when the engine offers a range; `0` = use the engine's default | 0 |
+| `hash_choice` | the chosen Hash value, when the engine offers a fixed list | empty |
+| `threads` | UCI `Threads` | 1 |
+| `last_save_dir_engine` | folder the Browse dialog opens in | empty |
+| `last_save_dir_png` | folder of the last saved PNG (also where search logs go) | empty |
+
+---
+
+## Output files
+
+**The PNG.** Drawn by the same code as the window, at twice the resolution. The proposed name is
+
+```
+eval-graph-<engine>-maxdep<n>-maxsec<n>-mpv<n>.png
+```
+
+for example `eval-graph-Glimmerfish-2.3-maxdep0-maxsec120-mpv6.png`.
+
+**The search log.** When a search ends, the whole UCI conversation is written automatically, under the same name with `.log`, in the folder of your last saved PNG — or next to the program if you have not saved one yet. Lines starting with `>` are what RBevalgraph sent, `<` what the engine said. Handy when an engine produces odd output.
+
+---
+
+## Engine detection
+
+As soon as the engine path changes, RBevalgraph starts the engine and sends `uci`:
+
+- It collects the engine's name (`id name`) and its option list until `uciok`.
+- The controls then adapt: **MultiPV**, **Hash** and **Threads** get the engine's own limits and defaults, or are grayed out when the engine lacks them. When an engine offers Hash as a fixed list of values instead of a range, a drop-down replaces the number field.
+- The pane with the engine's complete answer opens once; the **ⓘ** button shows it again later.
+- The status line tells you how long the engine needed to initialise.
+
+**Timeouts:** the engine gets **10 seconds of silence**, not 10 seconds in total — every line it prints resets the clock — with an absolute ceiling of **60 seconds**. So a slow starter can load its nets or books, while a dead binary fails quickly. Neither protocol defines a number for this; see the comment at `probeIdle` in `main.go`.
+
+**Not a UCI engine?** If there is no UCI answer, RBevalgraph tries the XBoard (CECP) protocol, only to tell you *what* the program is: "… is an XBoard engine … RBevalgraph can only handle an UCI engine". Generate stays unavailable.
+
+---
+
+## The diagram and the Chess Alpha font
+
+The position is drawn in the top of the key column as soon as the FEN is valid, seen from the side to move. The **⇅** (toggle) button flips the board.
+
+For the pieces, RBevalgraph prefers the **Chess Alpha** font by Eric Bentzen. If it is not installed, it falls back to the Unicode chess symbols of a common font (Noto Sans Symbols2, DejaVu Sans or FreeSerif), which every desktop has. So the font is a recommendation, not a requirement.
+
+The font is included in this repository as `fonts/chess.ttf`, but it is **not embedded** in the program; it has to be installed on your machine:
+
+```
+mkdir -p ~/.local/share/fonts
+cp fonts/chess.ttf ~/.local/share/fonts/
+fc-cache -f
+fc-list | grep -i "chess alpha"     # should print one line
+```
+
+Restart RBevalgraph afterwards.
+
+**How the font is detected:** by its measurements, not by name. A real chess font draws one square per glyph — every character is exactly one em wide and has no descender. A text font that the system silently substitutes fails that test. This matters, because Chess Alpha puts the pieces on ordinary letters: without the check, a substituted font would print `k q r` on the squares instead of pieces. See `pieces()` in `main.go`.
+
+> Chess Alpha was made by **Eric Bentzen** and published as a free font on his site enpassant.dk. Many thanks to him for it. It is included here for non-commercial use, unchanged, and is not covered by this project's GPL licence.
 
 ---
 
@@ -167,169 +338,6 @@ The package lists below follow the instructions of the GTK4 bindings ([gotk4-exa
 For the Chess Alpha font, double-click `fonts/chess.ttf` and choose **Install Font**.
 
 As on Linux, the first build takes several minutes. Use `go build -v` to see that it is making progress.
-
----
-
-## Using it
-
-1. **Engine** — type a path or press **Browse…** to pick a UCI engine binary. RBevalgraph asks the engine who it is and which options it has (see below). The **ⓘ** button beside it shows the engine's full answer.
-2. **FEN** — paste a position. The field turns red while it cannot be parsed. A valid FEN shows its diagram at once.
-3. **Settings** — MultiPV, max seconds, max depth, Hash and Threads. Fields the engine does not support are grayed out.
-4. **Generate eval graph** — the search starts and the graph grows live. **Stop** ends it early; everything found so far stays.
-5. **Save PNG** — write the graph as it stands.
-
-The search stops at whichever limit comes first:
-
-- **Max seconds** — wall-clock limit, whatever depth has been reached.
-- **Max depth** — stop once this depth is complete for every candidate. `0` switches the depth limit off and lets the seconds decide.
-
----
-
-## About MultiPV
-
-### What it is
-
-Normally a chess engine looks for **one** best move and reports one main line, its *principal variation* (PV). With the UCI option **MultiPV** set to N, the engine reports the **N best moves**, each with its own line and its own evaluation, at every depth. RBevalgraph draws one coloured line for each of them.
-
-### What it costs
-
-In general, an engine does this by searching its best move first, then searching again with that move excluded to find the second best, and so on. How exactly depends on the engine, but each extra line costs a good part of an extra search. So in the same time, a higher MultiPV reaches a **lower depth**. You can see this for yourself in RBevalgraph: run the same position for the same time with MultiPV 1 and with MultiPV 8, and compare the depth on the right end of the axis.
-
-### Playing: leave it at 1
-
-For games, MultiPV belongs at 1. Time spent on the second, third and further moves is time not spent on the move the engine will actually play, so the chosen move gets weaker. Stockfish's own documentation gives exactly this advice, and it applies to engines in general. So in a GUI such as CuteChess, which can set MultiPV for an engine, keep it at 1 for matches and tournaments.
-
-MultiPV also does not show how the engine "thinks" during a game. With MultiPV 1, the engine only needs to prove that other moves are **worse** than its best one; it never works out how much worse. The exact values of lines 2 to N are extra work that only happens in MultiPV mode.
-
-### Analysing: what MultiPV is for
-
-For analysis, MultiPV is the tool: it shows which moves were candidates, how close they were, and how that changed with depth — which is exactly what RBevalgraph plots.
-
-**MultiPV can find moves that MultiPV 1 misses.** Modern engines spend little effort on moves that look bad early on: they are searched less deep than the main line, or cut off entirely. That is a big part of their strength, but it can hide a move whose value only shows at high depth, such as a sacrifice that first loses material. With MultiPV N, the N best moves are each searched as a main line, at full depth. A "puzzle move" that looks like the 7th best at low depth gets that full treatment only if MultiPV is 7 or more — and then it may climb to first place, where with MultiPV 1 it would never have been looked at closely. That is why a solution sometimes only appears with MultiPV 10 or higher. How strong this effect is differs per engine, and it is not guaranteed.
-
-**How far to trust lines 2 to N.** Line 1 is a normal search, only less deep than it would be in the same time with MultiPV 1. The other lines are searched with the knowledge gathered for the lines before them, and engines implement this with different care. Some report lines that are not in value order — example 2 in [examples/](examples/) shows this — and some are less precise for the lower lines. RBevalgraph always ranks by value, whatever the engine's own numbering.
-
-### Choosing a value in RBevalgraph
-
-- **3 to 6** gives a readable overview of the main candidates.
-- **8 to 12** for puzzles and sharp positions, with more time to make up for the lower depth.
-- To see how a particular move ranks, MultiPV must be at least its rank; moves that fall out of the list are shown thinner below the separator in the key column.
-- To compare engines, give them the same MultiPV, time, Hash and Threads.
-- With more than one thread, a search is not exactly repeatable: two runs of the same setup can differ a little.
-
----
-
-## Reading the graph
-
-- **Horizontal axis:** search depth. Under the axis, the elapsed seconds at each depth (`< elapsed seconds >`), and a countdown while the search runs.
-- **Vertical axis:** the engine's evaluation in pawns (the engine's centipawns / 100), plotted as the engine reports it: from the engine's point of view, so higher is better for the side to move — also when Black is to move. A mate score is plotted at ±10 and labelled `#+n` / `#-n` in the key column.
-- **The vertical scale is compressed.** Engine evaluations cluster: most candidates sit within a few centipawns of each other, while one line may wander far off. So the axis is centred on the cluster, linear near it and logarithmic beyond. The grid labels always show real values. When this compression is active, a note says so, upright along the left side of the eval labels.
-- **Lines are corner-rounded, not smoothed.** A smoothing spline would overshoot between points and draw evaluations the engine never reported.
-- **Equal values** at the same depth are fanned apart by a few pixels so no line hides behind another.
-- **The big dot with a black ring** marks the engine's `bestmove`.
-
-### The key column (right side)
-
-Below the diagram, every move the engine considered is listed with its colour, its SAN name and its latest evaluation. There are two groups, separated by a thin rule:
-
-- **Top group** — the moves present at the *last complete depth* (the deepest depth at which all MultiPV slots reported), sorted by evaluation. Thick lines, bold text.
-- **The rest** — moves that were in the MultiPV list at some point but fell out of it. Thin lines, with `(depth n)` telling you at which depth they were last seen — their value belongs to that depth. Their names are also printed at the end of their line in the plot.
-
-**Hover** over a move in the key column: an arrow shows that move on the diagram.
-
-### Colours and their behaviour
-
-A colour belongs to a **rank**, not to a move. The list runs warm to cool — **red, orange, dark yellow, green, dark blue, purple, brown, light blue, light pink**, then grey, indigo and further colours (18 in total, then they repeat).
-
-So a move takes the colour of the place it holds *now*: when one move overtakes another, the two lines swap colours. The red line is always the current number one. This is deliberate — you read the graph by rank.
-
-The palette is the `palette` variable in `main.go`, one line per colour.
-
----
-
-## The diagram and the Chess Alpha font
-
-The position is drawn in the top of the key column as soon as the FEN is valid, seen from the side to move. The **⇅** (toggle) button flips the board.
-
-For the pieces, RBevalgraph prefers the **Chess Alpha** font by Eric Bentzen. If it is not installed, it falls back to the Unicode chess symbols of a common font (Noto Sans Symbols2, DejaVu Sans or FreeSerif), which every desktop has. So the font is a recommendation, not a requirement.
-
-The font is included in this repository as `fonts/chess.ttf`, but it is **not embedded** in the program; it has to be installed on your machine:
-
-```
-mkdir -p ~/.local/share/fonts
-cp fonts/chess.ttf ~/.local/share/fonts/
-fc-cache -f
-fc-list | grep -i "chess alpha"     # should print one line
-```
-
-Restart RBevalgraph afterwards.
-
-**How the font is detected:** by its measurements, not by name. A real chess font draws one square per glyph — every character is exactly one em wide and has no descender. A text font that the system silently substitutes fails that test. This matters, because Chess Alpha puts the pieces on ordinary letters: without the check, a substituted font would print `k q r` on the squares instead of pieces. See `pieces()` in `main.go`.
-
-> Chess Alpha was made by **Eric Bentzen** and published as a free font on his site enpassant.dk. Many thanks to him for it. It is included here for non-commercial use, unchanged, and is not covered by this project's GPL licence.
-
----
-
-## Engine detection
-
-As soon as the engine path changes, RBevalgraph starts the engine and sends `uci`:
-
-- It collects the engine's name (`id name`) and its option list until `uciok`.
-- The controls then adapt: **MultiPV**, **Hash** and **Threads** get the engine's own limits and defaults, or are grayed out when the engine lacks them. When an engine offers Hash as a fixed list of values instead of a range, a drop-down replaces the number field.
-- The pane with the engine's complete answer opens once; the **ⓘ** button shows it again later.
-- The status line tells you how long the engine needed to initialise.
-
-**Timeouts:** the engine gets **10 seconds of silence**, not 10 seconds in total — every line it prints resets the clock — with an absolute ceiling of **60 seconds**. So a slow starter can load its nets or books, while a dead binary fails quickly. Neither protocol defines a number for this; see the comment at `probeIdle` in `main.go`.
-
-**Not a UCI engine?** If there is no UCI answer, RBevalgraph tries the XBoard (CECP) protocol, only to tell you *what* the program is: "… is an XBoard engine … RBevalgraph can only handle an UCI engine". Generate stays unavailable.
-
----
-
-## config.yaml
-
-All settings are saved instantly to `config.yaml`, next to the `rbevalgraph` binary (or in the working directory if that folder is not writable). The file is optional: delete it and the program starts with defaults. A damaged file is ignored and overwritten at the next change.
-
-Example (fantasy values):
-
-```yaml
-engine: /home/you/chess/engines/glimmerfish/glimmerfish-2.3
-fen: r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4
-multipv: 6
-max_seconds: 120
-max_depth: 0
-hash_mb: 256
-hash_choice: ""
-threads: 4
-last_save_dir_engine: /home/you/chess/engines/glimmerfish
-last_save_dir_png: /home/you/chess/graphs
-```
-
-| Key | Meaning | Default |
-|---|---|---|
-| `engine` | path to the UCI engine binary | empty |
-| `fen` | the position | empty |
-| `multipv` | number of candidate moves (UCI `MultiPV`) | 1 |
-| `max_seconds` | wall-clock limit of a search | 60 |
-| `max_depth` | depth limit, `0` = off | 0 |
-| `hash_mb` | Hash size in MB, when the engine offers a range; `0` = use the engine's default | 0 |
-| `hash_choice` | the chosen Hash value, when the engine offers a fixed list | empty |
-| `threads` | UCI `Threads` | 1 |
-| `last_save_dir_engine` | folder the Browse dialog opens in | empty |
-| `last_save_dir_png` | folder of the last saved PNG (also where search logs go) | empty |
-
----
-
-## Output files
-
-**The PNG.** Drawn by the same code as the window, at twice the resolution. The proposed name is
-
-```
-eval-graph-<engine>-maxdep<n>-maxsec<n>-mpv<n>.png
-```
-
-for example `eval-graph-Glimmerfish-2.3-maxdep0-maxsec120-mpv6.png`.
-
-**The search log.** When a search ends, the whole UCI conversation is written automatically, under the same name with `.log`, in the folder of your last saved PNG — or next to the program if you have not saved one yet. Lines starting with `>` are what RBevalgraph sent, `<` what the engine said. Handy when an engine produces odd output.
 
 ---
 
