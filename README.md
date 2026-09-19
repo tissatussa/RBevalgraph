@@ -10,7 +10,7 @@ RBevalgraph is a small desktop program (Go + GTK4) that runs a UCI chess engine 
 
 A one-minute search, live (no sound):
 
-https://github.com/user-attachments/assets/0fa3f159-252a-4239-9b1b-87f0c35aa87d
+https://github.com/user-attachments/assets/67c67294-b561-4a54-b412-08b4191b0849
 
 More examples, with their graphs and search logs, are in [examples/](examples/).
 
