@@ -2,7 +2,9 @@
 
 Each example is a pair of files with the same name: the **PNG** is the graph as RBevalgraph saved it, the **log** is the complete UCI conversation between RBevalgraph and the engine during that search. Together they let you see the result and check exactly where every point in the graph came from.
 
-`screencast-1360x850.mp4` (no sound) shows the search of example 2 as it happens: the settings above, the graph growing depth by depth below, and the lines changing colour as the ranking changes. The engine path and FEN fields are cropped off; the engine name and the FEN are in the graph's header anyway.
+The screencast below (about a minute, no sound) shows the search of example 2 as it happens: the settings at the top, the graph growing depth by depth, and the lines changing colour as the ranking changes. The engine path and FEN fields are cropped off; the engine name and the FEN are in the graph's header anyway. The same video is in this folder as `screencast-1360x850.mp4`.
+
+https://github.com/user-attachments/assets/0fa3f159-252a-4239-9b1b-87f0c35aa87d
 
 ---
 
@@ -35,6 +37,8 @@ The name only carries these four values. **It does not tell the position, Hash, 
 ---
 
 ## Reading the graph
+
+The explanations below refer to the two example graphs further down this page.
 
 ### The horizontal axis: depth, with elapsed seconds on top
 
@@ -86,6 +90,8 @@ The big dot with the black ring marks the engine's `bestmove`. Two moves with ex
 | Reached | depth 26 after 114 seconds |
 | Best move | Qb3 (`c4b3`), +0.86 |
 
+[![Example 1: GC-Engine 1.2.1, 120 seconds](eval-graph-GC-Engine-1.2.1-maxdep0-maxsec120-mpv5.png)](eval-graph-GC-Engine-1.2.1-maxdep0-maxsec120-mpv5.png)
+
 Things to notice:
 
 - **Qe6** (orange) is at +0.86 from depth 5 onwards and does not change at all, while **Qb3** (red) only appears at depth 13 and swings between +0.79 and +1.19. At depth 26 both are +0.86; the engine lists Qb3 first, and it becomes the `bestmove`.
@@ -97,7 +103,7 @@ Things to notice:
 
 ## Example 2 — Hypersion 3.2, same position, 60 seconds
 
-`eval-graph-Hypersion-3.2-maxdep0-maxsec60-mpv5.png` · `.log` · and the screencast `screencast-1360x850.mp4`
+`eval-graph-Hypersion-3.2-maxdep0-maxsec60-mpv5.png` · `.log` · and the screencast shown at the top of this page
 
 | | |
 |---|---|
@@ -105,6 +111,8 @@ Things to notice:
 | Settings | MultiPV 5 · Hash 64 · Threads 4 · 60 seconds · no depth limit |
 | Reached | depth 20 after 37 seconds |
 | Best move | Qb3 (`c4b3`), +0.78 |
+
+[![Example 2: Hypersion 3.2, 60 seconds](eval-graph-Hypersion-3.2-maxdep0-maxsec60-mpv5.png)](eval-graph-Hypersion-3.2-maxdep0-maxsec60-mpv5.png)
 
 Things to notice:
 
