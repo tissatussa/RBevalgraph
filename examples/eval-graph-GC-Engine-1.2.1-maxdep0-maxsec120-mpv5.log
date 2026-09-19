@@ -1,6 +1,6 @@
 # RBevalgraph search log
 # 2026-09-19 14:03:45
-# engine: GC-Engine 1.2.1  (/home/roelof/Apps/RBmcts/some_other_engines/GC-engine/GC-engine-v1.2.1-compiled-EB-PGO-PEXT)
+# engine: GC-Engine 1.2.1  (GC-engine-v1.2.1-compiled-EB-PGO-PEXT)
 # FEN:    6k1/5pp1/1p4rp/2p1n3/2q1P2P/2P2P2/1B1Q2P1/3R3K b - - 5 48
 # MultiPV 5  ·  Hash 64  ·  Threads 4  ·  cap 120s
 #

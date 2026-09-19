@@ -179,7 +179,7 @@ Below the diagram, every move the engine considered is listed with its colour, i
 
 ### Colours and their behaviour
 
-A colour belongs to a **rank**, not to a move. The list runs warm to cool — **red, orange, dark yellow, green, dark blue, dark pink, brown, light blue, light pink**, then grey, indigo and further colours (18 in total, then they repeat).
+A colour belongs to a **rank**, not to a move. The list runs warm to cool — **red, orange, dark yellow, green, dark blue, purple, brown, light blue, light pink**, then grey, indigo and further colours (18 in total, then they repeat).
 
 So a move takes the colour of the place it holds *now*: when one move overtakes another, the two lines swap colours. The red line is always the current number one. This is deliberate — you read the graph by rank.
 
@@ -310,9 +310,13 @@ RBevalgraph/
 │   └── info2.svg           About button               — inlined as aboutSVG
 ├── tools/
 │   └── uci-eval-graph.py   the original Python version (live + replay)
-├── examples/               fantasy names — sample material for testing and docs
-│   ├── uci-out-glimmerfish.log
-│   └── eval-graph-Glimmerfish-2.3-maxdep0-maxsec120-mpv6.png
+├── examples/               finished searches: each a graph plus its search log
+│   ├── README.md           how the examples were made and how to read them
+│   ├── eval-graph-GC-Engine-1.2.1-maxdep0-maxsec120-mpv5.png
+│   ├── eval-graph-GC-Engine-1.2.1-maxdep0-maxsec120-mpv5.log
+│   ├── eval-graph-Hypersion-3.2-maxdep0-maxsec60-mpv5.png
+│   ├── eval-graph-Hypersion-3.2-maxdep0-maxsec60-mpv5.log
+│   └── screencast-1360x850.mp4   a live search (example 2), no sound
 └── docs/
     └── screenshot-main.png  screenshot used at the top of this README
 ```
