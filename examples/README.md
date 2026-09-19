@@ -4,7 +4,7 @@ Each example is a pair of files with the same name: the **PNG** is the graph as 
 
 The screencast below (about a minute, no sound) shows the search of example 2 as it happens: the settings at the top, the graph growing depth by depth, and the lines changing colour as the ranking changes. The engine path and FEN fields are cropped off; the engine name and the FEN are in the graph's header anyway. The same video is in this folder as `screencast-1360x850.mp4`.
 
-https://github.com/user-attachments/assets/0fa3f159-252a-4239-9b1b-87f0c35aa87d
+https://github.com/user-attachments/assets/67c67294-b561-4a54-b412-08b4191b0849
 
 ---
 
